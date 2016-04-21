@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Chatroom</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type ="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type ="text/javascript">
+        $(document).ready(function (){
+        	console.log('Ready');
+
+            var socket = io.connect();
+            var name = prompt("Please enter your name");
+            //var name = 'Eric';
+
+            if (name != '') {
+                // Send to server to add new user
+                console.log('User - ' + name);
+                socket.emit('user_joined', {name:name});
+            }
+            else{
+                console.log('no name entered');
+                $('#error').html('<h3>You must enter a name to proceed! Please refersh.</h3>');
+            }        
+            
+            $('#form').submit(function(){
+                console.log('Submit button clicked');
+                socket.emit('new_msg', {
+                    name: name,
+                    msg: $('#msg').val()
+                });
+                $('#msg').val('');
+                return false;
+            });
+
+            socket.on('got_new_user', function(data){
+                console.log('We have a new user');
+                $('#chat_board').append('New user - ' + data.name + ' has joined! \n');
+            });
+            
+            socket.on('update_msg', function(data){
+                console.log('Time to update msg');
+                $('#chat_board').append(data.name + "   " + data.msg + '\n');
+            });
+
+            socket.on('disconnect_user', function(data){
+                console.log('Someone disconnected');
+                $('#chat_board').append(data.name + ' has disconnected! \n'); 
+            });
+        })
+    </script>
+</head>
+<body>
+	<div id='container'>
+	   <div id='error'>
+       </div>
+
+       <div id='main'>
+            <h3>Conversation Board</h3>
+            <textarea id='chat_board' rows='20' cols='100'></textarea>
+
+            <form id='form'>
+                <input type="text" id='msg' name="msg" value="enter your message here" onFocus="this.value=''"><br>
+                <input type='submit' value='Send'>
+            </form>
+       </div>	
+	</div>	
+</body>
+</html>
